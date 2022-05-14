@@ -13,7 +13,7 @@ def documents_tfidf(documents):
         tf[i] = 0.5 +  0.5 * x[i] / max_term_freq
 
     idf = np.zeros(x.shape[1])
-    N = x.shape[1] + 1
+    N = x.shape[1] 
     for i in range(x.shape[1]):
         df = sum(1 for term_freq in x[:, i] if term_freq != 0)
         idf[i] = np.log(N + 1 / (df + 1))  # avoid zero division
