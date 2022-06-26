@@ -26,7 +26,13 @@ def get_training_dataset(dataset):
         try:
             X.append([docs[int(qrel.doc_id)], queries[int(qrel.query_id)]])
             Y.append(int(qrel.relevance))
-        except KeyError: # missing data
+        except KeyError:  # missing data
             pass
 
     return X, Y
+
+
+def get_word_index(vectorizer):
+    voc = vectorizer.get_vocabulary()
+    word_index = dict(zip(voc, range(len(voc))))
+    return word_index
