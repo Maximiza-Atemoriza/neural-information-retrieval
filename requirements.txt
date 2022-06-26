@@ -1,3 +1,6 @@
 numpy
 sklearn
 typer
+keras
+tensorflow
+ir_datasets
