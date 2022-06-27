@@ -2,11 +2,12 @@ import os
 import sys
 import numpy as np
 
-path_to_glove_file = './glove.6B.50d.txt'
+path_to_glove_file = "./glove.6B.50d.txt"
+
 
 def load_glove():
-    # change cwd to import modules 
-    sys.path.insert(0, '')
+    # change cwd to import modules
+    sys.path.insert(0, "")
     actual_wd = os.getcwd()
     os.chdir(os.path.dirname(__file__))
 
@@ -19,7 +20,7 @@ def load_glove():
             embeddings_index[word] = coefs
     print("Found %s word vectors." % len(embeddings_index))
 
-    # restore working directory 
+    # restore working directory
     os.chdir(actual_wd)
 
     return embeddings_index
