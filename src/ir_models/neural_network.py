@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from embeddings.glove import load_glove
-from embeddings.utils import get_embedding_matrix
+from ..embeddings.glove import load_glove
+from ..embeddings.utils import get_embedding_matrix
 from keras.layers import Embedding
-from utils import get_vectorizer, get_word_index
+from ..utils import get_vectorizer, get_word_index
 
 
 class NetRank:
