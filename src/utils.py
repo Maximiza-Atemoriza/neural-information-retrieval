@@ -9,10 +9,12 @@ def vocabulary_count(text: list[str]):
     return len(tokenizer.word_counts)
 
 
-def get_vectorizer(dataset):
+def get_vectorizer(dataset, max_tokens=20000, output_sequence_length=200):
     docs = [doc.text for doc in dataset.docs_iter()]
     queries = [query.text for query in dataset.queries_iter()]
-    vectorizer = TextVectorization()
+    vectorizer = TextVectorization(
+        max_tokens=max_tokens, output_sequence_length=output_sequence_length
+    )
     vectorizer.adapt(docs + queries)
     return vectorizer
 
@@ -24,7 +26,9 @@ def get_training_dataset(dataset):
     Y = []
     for qrel in dataset.qrels_iter():
         try:
-            X.append([docs[int(qrel.doc_id)], queries[int(qrel.query_id)]])
+            doc = docs[int(qrel.doc_id)]
+            query = queries[int(qrel.query_id)]
+            X.append([doc, query])
             Y.append(int(qrel.relevance))
         except KeyError:  # missing data
             pass
