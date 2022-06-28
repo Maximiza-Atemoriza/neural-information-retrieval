@@ -57,7 +57,10 @@ class NetRank:
 
         combined = layers.Concatenate()([x, y])
 
-        z = layers.Dense(4, activation="softmax")(combined)
+        number_of_relevance_levels = 5
+        z = layers.Dense(128, activation="relu")(combined)
+        z = layers.Dense(64, activation="relu")(z)
+        z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
         self.model = Model(inputs=[input_doc, input_query], outputs=z)
         self.model.summary()
 
@@ -66,8 +69,8 @@ class NetRank:
         docs = []
         queries = []
         for doc, query in X:
-            docs.append( self.vectorizer(doc).numpy())
-            queries.append( self.vectorizer(query).numpy())
+            docs.append(self.vectorizer(doc).numpy())
+            queries.append(self.vectorizer(query).numpy())
 
         docs = np.array(docs)
         queries = np.array(queries)
@@ -75,8 +78,9 @@ class NetRank:
         score = np.array(Y)
 
         self.model.compile(
-            loss=tf.keras.losses.MeanSquaredError(),
+            # loss=tf.keras.losses.MeanSquaredError(),
+            loss="sparse_categorical_crossentropy",
             optimizer="rmsprop",
             metrics=["acc"],
         )
-        self.model.fit([docs, queries], score, batch_size=128, epochs=20)
+        self.model.fit([docs, queries], score, batch_size=128, epochs=50)
