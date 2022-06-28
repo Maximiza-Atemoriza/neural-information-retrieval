@@ -7,6 +7,8 @@ from keras.layers import Embedding
 from keras import layers
 from keras import Model
 from ..utils import get_vectorizer, get_word_index, get_training_dataset
+import dill
+from keras.models import load_model
 
 
 class NetRank:
@@ -14,6 +16,30 @@ class NetRank:
         self.vectorizer = None
         self.word_index = None
         self.model = None
+
+    def save(self,path,model_name) -> None:
+        real_path = path + '/' + 'net_rank' + model_name
+        self.model.save(real_path)
+
+        file = open(real_path + '_vectorizer','wb')
+        dill.dumps(self.vectorizer, file)
+        file.close()
+
+        file = open(real_path + '_word_index','wb')
+        dill.dumps(self.word_index, file)
+        file.close()
+
+    def load(self, file_path, model_name) -> None:
+        self.model = load_model(file_path + model_name)
+
+        file = open(file_path + model_name + '_vectorizer')
+        self.vectorizer = dill.load(file)
+        file.close()
+
+        file = open(file_path + model_name + '_word_index')
+        self.word_index = dill.load(file)
+        file.close()
+
 
     def train(self, dataset):
         self.vectorizer = get_vectorizer(dataset)
