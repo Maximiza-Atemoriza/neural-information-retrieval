@@ -1,5 +1,6 @@
+from typing import Dict
+from keras.layers.preprocessing.text_vectorization import TextVectorization
 import numpy as np
-import tensorflow as tf
 from tensorflow import keras
 from ..embeddings.glove import load_glove
 from ..embeddings.utils import get_embedding_matrix
@@ -13,9 +14,24 @@ from keras.models import load_model
 
 class NetRank:
     def __init__(self) -> None:
-        self.vectorizer = None
-        self.word_index = None
-        self.model = None
+        self._vectorizer: TextVectorization | None = None
+        self._word_index: Dict[str, int] | None = None
+        self._model: Model | None = None
+
+    @property
+    def vectorizer(self) -> TextVectorization:
+        assert self._vectorizer is not None
+        return self._vectorizer
+
+    @property
+    def model(self) -> Model:
+        assert self._model is not None
+        return self._model
+
+    @property
+    def word_index(self) -> Dict[str, int]:
+        assert self._word_index is not None
+        return self._word_index
 
     def save(self, path, model_name) -> None:
         real_path = path + "/" + "net_rank" + model_name
@@ -30,24 +46,24 @@ class NetRank:
         file.close()
 
     def load(self, file_path, model_name) -> None:
-        self.model = load_model(file_path + model_name)
+        self._model = load_model(file_path + model_name)
 
         file = open(file_path + model_name + "_vectorizer")
-        self.vectorizer = dill.load(file)
+        self._vectorizer = dill.load(file)
         file.close()
 
         file = open(file_path + model_name + "_word_index")
-        self.word_index = dill.load(file)
+        self._word_index = dill.load(file)
         file.close()
 
     def train(self, dataset):
-        self.vectorizer = get_vectorizer(dataset)
-        self.word_index = get_word_index(self.vectorizer)
+        self._vectorizer = get_vectorizer(dataset)
+        self._word_index = get_word_index(self.vectorizer)
 
         embeddings_index = load_glove()
         embedding_dim = 50
 
-        num_tokens = len(self.word_index) + 2
+        num_tokens = len(self._word_index) + 2
         embedding_matrix = get_embedding_matrix(
             self.word_index, embeddings_index, num_tokens, embedding_dim
         )
@@ -87,8 +103,8 @@ class NetRank:
         z = layers.Dense(64, activation="relu")(z)
         z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
         # z = layers.Dense(number_of_relevance_levels, activation="softmax")(combined)
-        self.model = Model(inputs=[input_doc, input_query], outputs=z)
-        self.model.summary()
+        self._model = Model(inputs=[input_doc, input_query], outputs=z)
+        self._model.summary()
 
         X, Y = get_training_dataset(dataset)
 
