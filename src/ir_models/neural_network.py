@@ -129,3 +129,13 @@ class NetRank:
             epochs=30,
             validation_data=([val_docs, val_queries], val_score),
         )
+
+    def predict_score(self, doc: str, query: str):
+        doc_vec = self.vectorizer(doc).numpy()
+        query_vec = self.vectorizer(query).numpy()
+        d = np.array([doc_vec])
+        q = np.array([query_vec])
+        return self.model([d, q])
+
+    def predict_class(self, doc: str, query: str):
+        return np.argmax(self.predict_score(doc, query))
