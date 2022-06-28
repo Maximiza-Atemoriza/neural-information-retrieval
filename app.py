@@ -61,7 +61,9 @@ dataset_select: str = st.selectbox(
 
 query = st.text_input("Query:", placeholder="I dare you to query me!")
 
-search = st.button("Go!", disabled=len(query) == 0)
+search = st.button(
+    "Empty Query" if (len(query) == 0) else "Go!", disabled=len(query) == 0
+)
 
 if search:
     # Notify about query and query parameters
