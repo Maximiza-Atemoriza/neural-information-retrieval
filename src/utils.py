@@ -1,3 +1,4 @@
+from typing import Dict
 from keras.preprocessing.text import Tokenizer
 
 from keras.layers import TextVectorization
@@ -40,7 +41,7 @@ def get_training_dataset(dataset):
     return X, Y
 
 
-def get_word_index(vectorizer):
+def get_word_index(vectorizer) -> Dict[str, int]:
     voc = vectorizer.get_vocabulary()
     word_index = dict(zip(voc, range(len(voc))))
     return word_index
