@@ -17,29 +17,28 @@ class NetRank:
         self.word_index = None
         self.model = None
 
-    def save(self,path,model_name) -> None:
-        real_path = path + '/' + 'net_rank' + model_name
+    def save(self, path, model_name) -> None:
+        real_path = path + "/" + "net_rank" + model_name
         self.model.save(real_path)
 
-        file = open(real_path + '_vectorizer','wb')
+        file = open(real_path + "_vectorizer", "wb")
         dill.dumps(self.vectorizer, file)
         file.close()
 
-        file = open(real_path + '_word_index','wb')
+        file = open(real_path + "_word_index", "wb")
         dill.dumps(self.word_index, file)
         file.close()
 
     def load(self, file_path, model_name) -> None:
         self.model = load_model(file_path + model_name)
 
-        file = open(file_path + model_name + '_vectorizer')
+        file = open(file_path + model_name + "_vectorizer")
         self.vectorizer = dill.load(file)
         file.close()
 
-        file = open(file_path + model_name + '_word_index')
+        file = open(file_path + model_name + "_word_index")
         self.word_index = dill.load(file)
         file.close()
-
 
     def train(self, dataset):
         self.vectorizer = get_vectorizer(dataset)
@@ -131,3 +130,13 @@ class NetRank:
             epochs=30,
             validation_data=([val_docs, val_queries], val_score),
         )
+
+    def predict_score(self, doc: str, query: str):
+        doc_vec = self.vectorizer(doc).numpy()
+        query_vec = self.vectorizer(query).numpy()
+        d = np.array([doc_vec])
+        q = np.array([query_vec])
+        return self.model([d, q])
+
+    def predict_class(self, doc: str, query: str):
+        return np.argmax(self.predict_score(doc, query))
