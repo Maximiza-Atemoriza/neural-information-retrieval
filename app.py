@@ -1,11 +1,12 @@
-import weakref
-from keras.utils.object_identity import ObjectIdentityDictionary
+from typing import Any, List, Tuple
 import streamlit as st
 
 from src.ir_models.neural_network import NetRank
 from src.ir_models.vector import Vectorial
 
 import ir_datasets
+
+RankedDocs = List[Tuple[str, int]]
 
 # --------------------------------- Util Functions ---------------------------------
 def prepare_dataset(dataset: str):
@@ -18,17 +19,31 @@ def prepare_dataset(dataset: str):
 
 # Cache accordingly to input parameters
 @st.experimental_singleton(suppress_st_warning=True)  # pyright: ignore
-def prepare_model(model_select: str, dataset_select: str) -> NetRank | Vectorial:
+def prepare_model(
+    model_select: str, dataset_select: str
+) -> Tuple[NetRank | Vectorial, Any]:
     dataset = prepare_dataset(dataset_select)
     if model_select == LR:
         st.write(f"Cache Miss! Training LR model with {dataset_select}")
         lr = NetRank()
         lr.train(dataset)
         st.success(f"LR model trained succesfully with {dataset_select}")
-        return lr
+        return (lr, dataset)
     if model_select == VECT:
         pass
     raise Exception(f"Model option {model} not yet supported")
+
+
+def predict(model: NetRank | Vectorial, dataset: Any, query: str) -> RankedDocs:
+    assert isinstance(model, NetRank)
+    ranked: RankedDocs = []
+    for doc in dataset.docs_iter():
+        doc_text: str = doc.text
+        doc_score: int = model.predict_score(doc_text, query)
+        ranked.append((doc_text, doc_score))
+
+    ranked.sort(key=lambda x: x[1])
+    return ranked
 
 
 # ---------------------------------- Visual Stuff ----------------------------------
@@ -50,5 +65,10 @@ search = st.button("Go!", disabled=len(query) == 0)
 
 if search:
     # Notify about query and query parameters
-    model = prepare_model(model_select, dataset_select)
+    model, dataset = prepare_model(model_select, dataset_select)
+
     st.write(f"Querying _{query}_ ...")
+    ranked = predict(model, dataset, query)
+
+    for doc_text, doc_score in ranked:
+        st.write(doc_text, " ", doc_score)
