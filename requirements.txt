@@ -3,4 +3,5 @@ sklearn
 typer
 keras
 tensorflow
+dill
 ir_datasets
