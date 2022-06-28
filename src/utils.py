@@ -29,9 +29,11 @@ def get_training_dataset(dataset):
             doc = docs[int(qrel.doc_id)]
             query = queries[int(qrel.query_id)]
             X.append([doc, query])
-            Y.append(int(qrel.relevance))
-            if Y[-1] == -1:  # TODO: remove the patch :D
-                Y[-1] = 0
+            Y.append(int(qrel.relevance) - 1)
+            # Y.append(int(qrel.relevance))
+            # if Y[-1] == -1:  # TODO: remove the patch :D
+            #     Y[-1] = 0
+
         except KeyError:  # missing data
             pass
 

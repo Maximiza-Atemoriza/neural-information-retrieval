@@ -57,10 +57,11 @@ class NetRank:
 
         combined = layers.Concatenate()([x, y])
 
-        number_of_relevance_levels = 5
+        number_of_relevance_levels = 4
         z = layers.Dense(128, activation="relu")(combined)
         z = layers.Dense(64, activation="relu")(z)
         z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
+        # z = layers.Dense(number_of_relevance_levels, activation="softmax")(combined)
         self.model = Model(inputs=[input_doc, input_query], outputs=z)
         self.model.summary()
 
@@ -76,11 +77,31 @@ class NetRank:
         queries = np.array(queries)
 
         score = np.array(Y)
+        print("*******************************************************")
+        print(f"score len {len(score)}")
+        print(f"docs len {len(docs)} and queries len {len(queries)}")
+        print("*******************************************************")
+
+        validation_split = 0.2
+        num_validation_samples = int(validation_split * len(score))
+        train_docs = docs[:-num_validation_samples]
+        train_queries = queries[:-num_validation_samples]
+        train_score = score[:-num_validation_samples]
+
+        val_docs = docs[-num_validation_samples:]
+        val_queries = queries[-num_validation_samples:]
+        val_score = score[-num_validation_samples:]
 
         self.model.compile(
             # loss=tf.keras.losses.MeanSquaredError(),
             loss="sparse_categorical_crossentropy",
-            optimizer="rmsprop",
+            optimizer="adam",
             metrics=["acc"],
         )
-        self.model.fit([docs, queries], score, batch_size=128, epochs=50)
+        self.model.fit(
+            [train_docs, train_queries],
+            train_score,
+            batch_size=128,
+            epochs=30,
+            validation_data=([val_docs, val_queries], val_score),
+        )
