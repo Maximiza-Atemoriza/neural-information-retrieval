@@ -57,7 +57,7 @@ class NetRank:
 
         combined = layers.Concatenate()([x, y])
 
-        number_of_relevance_levels = 4
+        number_of_relevance_levels = 5
         z = layers.Dense(128, activation="relu")(combined)
         z = layers.Dense(64, activation="relu")(z)
         z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
