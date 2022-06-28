@@ -6,3 +6,4 @@ tensorflow
 dill
 ir_datasets
 streamlit
+spacy

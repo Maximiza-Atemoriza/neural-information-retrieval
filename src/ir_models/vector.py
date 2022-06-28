@@ -1,82 +1,78 @@
-from typing import List, Tuple
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 from numpy.linalg import norm
+from ..utils import remove_stopwords
+import dill
 
 
-class Vectorial:
-    def __init__(self, documents) -> None:
-        self._documents = documents
-        self._vectorizer: CountVectorizer | None = None
-        self._idf: np.ndarray | None = None
-        self._rank: np.ndarray | None = None
+class VectorModel:
+    def __init__(self) -> None:
+        self.count_vectorizer: CountVectorizer | None = None
+        self.documents_tfidf: np.ndarray | None = None
+        self.idf: np.ndarray | None = None
 
-    @property
-    def vectorizer(self) -> CountVectorizer:
-        if self._vectorizer is None:
-            self.process_tf_idf()
+    def save(self, path):
+        file = open(path, "wb")
+        dill.dump(self, file)
+        file.close()
 
-        assert self._vectorizer is not None
-        return self._vectorizer
+    @staticmethod
+    def load(path):
+        file = open(path, "rb")
+        model = dill.load(file)
+        file.close()
+        return model
 
-    @property
-    def idf(self) -> np.ndarray:
-        if self._idf is None:
-            self.process_tf_idf()
+    def index(self, dataset):
+        docs = [remove_stopwords(doc.text) for doc in dataset.docs_iter()]
+        self._documents_tfidf(docs)
 
-        assert self._idf is not None
-        return self._idf
+    def _documents_tfidf(self, documents, k=0.5):
+        self.count_vectorizer = CountVectorizer()
+        counts = self.count_vectorizer.fit_transform(documents)
 
-    @property
-    def rank(self) -> np.ndarray:
-        if self._rank is None:
-            self.process_tf_idf()
-
-        assert self._rank is not None
-        return self._rank
-
-    def process_tf_idf(self):
-        vectorizer = CountVectorizer()
-        counts = vectorizer.fit_transform(self._documents)
         x = counts.toarray()
         tf = np.zeros(x.shape)
         for i in range(x.shape[0]):
-            max_term_freq = x[i].max() + 1
-            tf[i] = 0.5 + 0.5 * x[i] / max_term_freq
+            max_term_freq = x[i].max()
+            tf[i] = x[i] / max_term_freq
 
-        idf = np.zeros(x.shape[1])
-        N = x.shape[1]
+        self.idf = np.zeros(x.shape[1])
+        N = x.shape[0]
         for i in range(x.shape[1]):
             df = sum(1 for term_freq in x[:, i] if term_freq != 0)
-            idf[i] = np.log(N + 1 / (df + 1))  # avoid zero division
+            self.idf[i] = np.log(N / df)
 
-        tfidf = np.zeros(x.shape)
+        self.documents_tfidf = np.zeros(x.shape)
         for i in range(x.shape[1]):
-            tfidf[:, i] = tf[:, i] * idf[i]
+            self.documents_tfidf[:, i] = tf[:, i] * self.idf[i]
 
-        for i in range(x.shape[0]):
-            tfidf[i] = tfidf[i] / norm(tfidf[i])
+    def _query_tfidf(self, query, a=0.5):
+        if self.count_vectorizer is None:
+            raise Exception("No indexed dataset!")
 
-        self._vectorizer = vectorizer
-        self._rank = tfidf
-        self._idf = idf
-
-    def process_query_tf_idf(self, query):
-        query_tfidf = self.vectorizer.transform([query]).toarray()[0]
-        max_term_freq = query_tfidf.max() + 1  # avoid zero division
-        query_tfidf = 0.5 + 0.5 * query_tfidf / max_term_freq
-        query_tfidf = query_tfidf * self.idf
-
+        query_tfidf = self.count_vectorizer.transform([query]).toarray()
+        max_term_freq = query_tfidf.max()
+        if max_term_freq > 0:
+            query_tfidf = (a + (1 - a) * (query_tfidf / max_term_freq)) * self.idf
         return query_tfidf
 
-    def get_relevan_documents(self, query_vector):
-        documents_vectors = self.rank
-        results = {}
-        for i in range(documents_vectors.shape[0]):
-            results[i] = np.dot(query_vector, documents_vectors[i])
-            results[i] = results[i] / (norm(query_vector) * norm(documents_vectors[i]))
-        return sorted(results.items(), key=lambda kv: -1 * kv[1])
+    def relevant_docs(self, query, n=10):
+        if self.documents_tfidf is None:
+            raise Exception("No indexed dataset!")
 
-    def __call__(self, query: str) -> List[Tuple[str, int]]:
-        query_vector = self.process_query_tf_idf(query)
-        return self.get_relevan_documents(query_vector)
+        results = {}
+        query_vector = self._query_tfidf(query)
+
+        zeros = query_vector == 0
+        if zeros.all():
+            return []
+
+        for i in range(self.documents_tfidf.shape[0]):
+            results[i] = np.dot(query_vector, self.documents_tfidf[i])
+            results[i] = results[i] / (
+                norm(query_vector) * norm(self.documents_tfidf[i])
+            )
+        doc_score = sorted(results.items(), key=lambda kv: -1 * kv[1])
+
+        return doc_score[:n]
