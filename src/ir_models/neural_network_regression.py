@@ -40,7 +40,7 @@ class NetRankRegression:
         self.word_index = dill.load(file)
         file.close()
 
-    def train(self, dataset):
+    def train(self, dataset, cat):
         self.vectorizer = get_vectorizer(dataset)
         self.word_index = get_word_index(self.vectorizer)
 

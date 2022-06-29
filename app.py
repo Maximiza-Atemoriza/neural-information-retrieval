@@ -1,7 +1,7 @@
 from typing import Any, List, Tuple
 import streamlit as st
 
-from src.ir_models.neural_network import NetRank
+from src.ir_models.neural_network_regression import NetRankRegression
 from src.ir_models.vector import VectorModel
 
 import ir_datasets
@@ -45,7 +45,7 @@ def prepare_dataset(dataset: str):
 @st.experimental_singleton(suppress_st_warning=True)  # pyright: ignore
 def prepare_model(
     model_select: str, dataset_select: str
-) -> Tuple[VectorModel, NetRank | None, Any]:
+) -> Tuple[VectorModel, NetRankRegression | None, Any]:
     dataset, cat = prepare_dataset(dataset_select)
 
     if model_select in [VECT, LR]:
@@ -55,7 +55,7 @@ def prepare_model(
         st.success(f"Vector model trained succesfully with {dataset_select}")
         if model_select == LR:
             st.write(f"Cache Miss! Training LR model with {dataset_select}")
-            lr = NetRank()
+            lr = NetRankRegression()
             lr.train(dataset, cat)
             st.success(f"LR model trained succesfully with {dataset_select}")
             return (v, lr, dataset)
@@ -66,7 +66,10 @@ def prepare_model(
 
 
 def predict(
-    vector_model: VectorModel, netrank_model: NetRank | None, dataset: Any, query: str
+    vector_model: VectorModel,
+    netrank_model: NetRankRegression | None,
+    dataset: Any,
+    query: str,
 ) -> RankedDocs:
     vector_ranked: RankedDocs = vector_model.get_ranked_docs(query, dataset)
     vector_ranked.sort(key=lambda x: -x[1])
@@ -76,7 +79,7 @@ def predict(
     net_ranked: RankedDocs = []
     for (doc, _) in vector_ranked[0 : min(max_vect_use, len(vector_ranked))]:
         doc_text: str = doc.text
-        doc_score: int = int(netrank_model.predict_class(doc_text, query))
+        doc_score: int = netrank_model.predict_score(doc_text, query)[0]
         net_ranked.append((doc, doc_score))
 
     net_ranked.sort(key=lambda x: -x[1])
