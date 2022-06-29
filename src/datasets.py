@@ -2,9 +2,9 @@ from .utils import remove_stopwords
 import dill
 from collections import namedtuple
 
-Query = namedtuple("Query","query_id text")
-Document = namedtuple("Document","doc_id text")
-Qrel = namedtuple("Qrel","query_id doc_id relevance")
+Query = namedtuple("Query", "query_id text")
+Document = namedtuple("Document", "doc_id text")
+Qrel = namedtuple("Qrel", "query_id doc_id relevance")
 
 
 class IRDataset:
@@ -14,22 +14,22 @@ class IRDataset:
         self.qrels: list | None = None
 
     def save(self, path):
-        file = open(path, "wb")
-        dill.dump(self, file)
-        file.close()
+        with open(path, "wb") as f:
+            dill.dump(self, f)
 
     @staticmethod
     def load(path):
-        file = open(path, "rb")
-        model = dill.load(file)
-        file.close()
-        return model
+        with open(path, "rb") as f:
+            model = dill.load(f)
+            return model
 
     def process_dataset(self, dataset, verbose=False):
         self.docs = {}
         for doc in dataset.docs_iter():
             if verbose:
                 print(f"Processing document {doc.doc_id}...")
+            if doc.text == "":
+                continue
             self.docs[int(doc.doc_id)] = remove_stopwords(doc.text)
 
         self.queries = {}
