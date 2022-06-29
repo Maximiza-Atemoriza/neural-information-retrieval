@@ -24,7 +24,7 @@ class VectorModel:
         return model
 
     def index(self, dataset):
-        docs = [remove_stopwords(doc.text) for doc in dataset.docs_iter()]
+        docs = [doc.text for doc in dataset.docs_iter()]
         self._documents_tfidf(docs)
 
     def _documents_tfidf(self, documents, k=0.5):
