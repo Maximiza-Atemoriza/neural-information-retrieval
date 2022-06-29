@@ -2,9 +2,9 @@ from .utils import remove_stopwords
 import dill
 from collections import namedtuple
 
-Query = namedtuple("Query","query_id text")
-Document = namedtuple("Document","doc_id text")
-Qrel = namedtuple("Qrel","query_id doc_id relevance")
+Query = namedtuple("Query", "query_id text")
+Document = namedtuple("Document", "doc_id text")
+Qrel = namedtuple("Qrel", "query_id doc_id relevance")
 
 
 class IRDataset:
@@ -25,29 +25,28 @@ class IRDataset:
         file.close()
         return model
 
-    def process_dataset(self, dataset, verbose=False):
+    def process_dataset(self, dataset, verbose=False, lemma=True):
         self.docs = {}
+
+        pipeline = lambda x : remove_stopwords(x,lemma)
+
         for doc in dataset.docs_iter():
             if verbose:
                 print(f"Processing document {doc.doc_id}...")
-            self.docs[int(doc.doc_id)] = remove_stopwords(doc.text)
+            self.docs[int(doc.doc_id)] = pipeline(doc.text)
 
         self.queries = {}
         for query in dataset.queries_iter():
             if verbose:
                 print(f"Processing query {query.query_id}...")
-            self.queries[int(query.query_id)] = remove_stopwords(query.text)
+            self.queries[int(query.query_id)] = pipeline(query.text)
 
         self.qrels = []
         for index, qrel in enumerate(dataset.qrels_iter()):
             if verbose:
                 print(f"Processing document-query relation {index}...")
             self.qrels.append(
-                (
-                    int(qrel.query_id),
-                    int(qrel.doc_id),
-                    int(qrel.relevance),
-                )
+                (Qrel(int(qrel.query_id), int(qrel.doc_id), int(qrel.relevance)))
             )
         if verbose:
             print("Processing done!")

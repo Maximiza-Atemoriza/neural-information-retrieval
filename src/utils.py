@@ -5,17 +5,21 @@ from keras.layers import TextVectorization
 import spacy
 
 
-def remove_stopwords(text):
+def remove_stopwords(text, lemma=False):
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(text)
 
     new_doc = []
     for token in doc:
         if not token.is_stop:
-            new_doc.append(token.text)
+            if lemma:
+                new_doc.append(token.lemma_)
+            else:
+                new_doc.append(token.text)
     new_text = " ".join(new_doc)
 
     return new_text
+
 
 def vocabulary_count(text: list[str]):
     tokenizer = Tokenizer()
