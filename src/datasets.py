@@ -1,8 +1,7 @@
-from utils import remove_stopwords
+from .utils import remove_stopwords
 import dill
 
 
-# TODO Test
 class IRDataset:
     def __init__(self) -> None:
         self.queries: dict[int, str] | None = None
@@ -40,7 +39,6 @@ class IRDataset:
                 print(f"Processing document-query relation {index}...")
             self.qrels.append(
                 (
-                    int(qrel.query),
                     int(qrel.doc_id),
                     int(qrel.query_id),
                     int(qrel.relevance),
