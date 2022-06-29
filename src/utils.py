@@ -13,7 +13,7 @@ def remove_stopwords(text):
     for token in doc:
         if not token.is_stop:
             new_doc.append(token.text)
-    new_text = "".join(new_doc)
+    new_text = " ".join(new_doc)
 
     return new_text
 
