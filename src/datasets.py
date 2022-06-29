@@ -44,8 +44,8 @@ class IRDataset:
                 print(f"Processing document-query relation {index}...")
             self.qrels.append(
                 (
-                    int(qrel.doc_id),
                     int(qrel.query_id),
+                    int(qrel.doc_id),
                     int(qrel.relevance),
                 )
             )
