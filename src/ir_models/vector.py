@@ -1,7 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer
 import numpy as np
 from numpy.linalg import norm
-from ..utils import remove_stopwords
 import dill
 
 
@@ -47,7 +46,7 @@ class VectorModel:
         for i in range(x.shape[1]):
             self.documents_tfidf[:, i] = tf[:, i] * self.idf[i]
 
-    def _query_tfidf(self, query, a=0.5):
+    def _query_tfidf(self, query, a=0.01):
         if self.count_vectorizer is None:
             raise Exception("No indexed dataset!")
 

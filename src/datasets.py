@@ -1,5 +1,10 @@
 from .utils import remove_stopwords
 import dill
+from collections import namedtuple
+
+Query = namedtuple("Query","query_id text")
+Document = namedtuple("Document","doc_id text")
+Qrel = namedtuple("Qrel","query_id doc_id relevance")
 
 
 class IRDataset:
@@ -39,8 +44,8 @@ class IRDataset:
                 print(f"Processing document-query relation {index}...")
             self.qrels.append(
                 (
-                    int(qrel.doc_id),
                     int(qrel.query_id),
+                    int(qrel.doc_id),
                     int(qrel.relevance),
                 )
             )
@@ -50,14 +55,14 @@ class IRDataset:
     def queries_iter(self):
         if self.queries is None:
             raise Exception("No dataset found!")
-        return self.queries.items()
+        return [Query(*item) for item in self.queries.items()]
 
     def docs_iter(self):
         if self.docs is None:
             raise Exception("No dataset found!")
-        return self.docs.items()
+        return [Document(*item) for item in self.docs.items()]
 
     def qrels_iter(self):
         if self.qrels is None:
             raise Exception("No dataset found!")
-        return self.qrels
+        return [Qrel(*item) for item in self.qrels]
