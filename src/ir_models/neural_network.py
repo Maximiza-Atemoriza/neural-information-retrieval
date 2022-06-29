@@ -56,7 +56,7 @@ class NetRank:
         self._word_index = dill.load(file)
         file.close()
 
-    def train(self, dataset):
+    def train(self, dataset, number_of_relevance_levels=5):
         self._vectorizer = get_vectorizer(dataset)
         self._word_index = get_word_index(self.vectorizer)
 
@@ -98,7 +98,6 @@ class NetRank:
 
         combined = layers.Concatenate()([x, y])
 
-        number_of_relevance_levels = 5
         z = layers.Dense(128, activation="relu")(combined)
         z = layers.Dense(64, activation="relu")(z)
         z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
@@ -134,7 +133,6 @@ class NetRank:
         val_score = score[-num_validation_samples:]
 
         self.model.compile(
-            # loss=tf.keras.losses.MeanSquaredError(),
             loss="sparse_categorical_crossentropy",
             optimizer="adam",
             metrics=["acc"],
