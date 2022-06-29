@@ -35,18 +35,32 @@ def prepare_model(
 
 
 def predict(model: NetRank | Vectorial, dataset: Any, query: str) -> RankedDocs:
-    assert isinstance(model, NetRank)
+    assert isinstance(model, NetRank), print(model)
     ranked: RankedDocs = []
     for doc in dataset.docs_iter():
-        doc_text: str = doc.text
-        doc_score: int = model.predict_score(doc_text, query)
+        # Patch for cranfield error
+        # if int(doc.doc_id) == 470:
+        # break
+        doc_text: str = doc.text[:10]
+        doc_score: int = int(model.predict_class(doc_text, query))
         ranked.append((doc_text, doc_score))
 
     ranked.sort(key=lambda x: x[1])
     return ranked
 
 
-# ---------------------------------- Visual Stuff ----------------------------------
+def printItmes(ranked: RankedDocs, amount: int):
+    markdow_table = "| document name | score |\n" "|    ----       |  ---- |\n"
+    markdow_table += "\n".join(
+        f"{ranked[i][0]} | {ranked[i][1]}|" for i in range(amount)
+    )
+    st.write(markdow_table)
+
+
+# ------------------------------ Side Visual Stuff ------------------------------
+max_results = st.sidebar.select_slider("Results Amount", [10 + i for i in range(41)])
+
+# ------------------------------ Main Visual Stuff ------------------------------
 st.title("Information Retrieval Final Project")
 
 model_possible_sections = [LR, VECT] = ["Learning to Rank (LR)", "Vectorial"]
@@ -72,5 +86,4 @@ if search:
     st.write(f"Querying _{query}_ ...")
     ranked = predict(model, dataset, query)
 
-    for doc_text, doc_score in ranked:
-        st.write(doc_text, " ", doc_score)
+    printItmes(ranked, 10)
