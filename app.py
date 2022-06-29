@@ -79,7 +79,7 @@ def predict(
     net_ranked: RankedDocs = []
     for (doc, _) in vector_ranked[0 : min(max_vect_use, len(vector_ranked))]:
         doc_text: str = doc.text
-        doc_score: int = netrank_model.predict_score(doc_text, query)[0]
+        doc_score: int = netrank_model.predict_score(doc_text, query)[0][0]
         net_ranked.append((doc, doc_score))
 
     net_ranked.sort(key=lambda x: -x[1])
@@ -128,7 +128,6 @@ search = st.button(
 )
 
 if search:
-    # Notify about query and query parameters
     vector_model, netrank_model, dataset = prepare_model(model_select, dataset_select)
 
     st.write(f"Querying _{query}_ ...")
