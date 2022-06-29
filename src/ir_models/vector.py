@@ -75,3 +75,21 @@ class VectorModel:
         doc_score = sorted(results.items(), key=lambda kv: -1 * kv[1])
 
         return doc_score[:n]
+
+    def get_ranked_docs(self, query: str, dataset):
+        query_vector = self._query_tfidf(query)
+        if (query_vector == 0).all():
+            return []
+
+        assert self.documents_tfidf is not None
+        docs = [doc for doc in dataset.docs_iter()]
+
+        ranked_docs = []
+        for i, doc in enumerate(docs):
+            doc_vector = self.documents_tfidf[i]
+            cost = np.dot(query_vector, doc_vector) / (
+                norm(query_vector) * norm(doc_vector)
+            )
+            ranked_docs.append((doc, cost[0]))
+
+        return ranked_docs
