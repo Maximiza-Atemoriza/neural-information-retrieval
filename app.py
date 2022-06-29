@@ -11,9 +11,9 @@ RankedDocs = List[Tuple[str, int]]
 # --------------------------------- Util Functions ---------------------------------
 def prepare_dataset(dataset: str):
     if dataset == CRAN:
-        return ir_datasets.load("cranfield")
+        return ir_datasets.load("cranfield"), 5
     if dataset == VASWANI:
-        return ir_datasets.load("vaswani")
+        return ir_datasets.load("vaswani"), 2
     raise Exception(f"Dataset option {dataset} not yet supported")
 
 
@@ -22,11 +22,11 @@ def prepare_dataset(dataset: str):
 def prepare_model(
     model_select: str, dataset_select: str
 ) -> Tuple[NetRank | Vectorial, Any]:
-    dataset = prepare_dataset(dataset_select)
+    dataset, cat = prepare_dataset(dataset_select)
     if model_select == LR:
         st.write(f"Cache Miss! Training LR model with {dataset_select}")
         lr = NetRank()
-        lr.train(dataset)
+        lr.train(dataset, cat)
         st.success(f"LR model trained succesfully with {dataset_select}")
         return (lr, dataset)
     if model_select == VECT:
