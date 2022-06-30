@@ -185,29 +185,36 @@ elif search and get_relevance:
     assert netrank_model is not None
 
     # relevant = [relevant for relevant in dataset.qrels_iter() if relevant.relevance > 0]
-    docs = {int(doc.doc_id): doc.text for doc in dataset.docs_iter()}
-    queries = {int(query.query_id): query.text for query in dataset.queries_iter()}
-
+    docs = {doc.doc_id: doc.text for doc in dataset.docs_iter()}
+    queries = {query.query_id: query.text for query in dataset.queries_iter()}
     qreldocs = dict()
     for qrel in dataset.qrels_iter():
         if qrel.relevance < 3:
             continue
         if qrel.query_id in qreldocs:
-            qreldocs[qrel.query_id].append(qrel.doc_id)
+            qreldocs[qrel.query_id].append(int(qrel.doc_id))
         else:
-            qreldocs[qrel.query_id] = [qrel.doc_id]
+            qreldocs[qrel.query_id] = [int(qrel.doc_id)]
 
+    precission_total = []
     recall_total = []
     querysings = set()
-    for qrel in dataset.qrels_iter():
+    for i, qrel in enumerate(dataset.qrels_iter()):
+        if i > 0 and i % 25:
+            st.write("Procesando", "==" * (i % 25))
+
         if qrel.query_id in querysings:
             continue
         querysings.add(qrel.query_id)
-        query = queries[qrel.query_id]
+        try:
+            query = queries[qrel.query_id]
+            dummy = qreldocs[qrel.query_id]
+        except KeyError:
+            continue
 
-        vector_ranked_docs = vector_model.get_ranked_docs(query.text, dataset)
+        vector_ranked_docs = vector_model.get_ranked_docs(query, dataset)
         vector_ranked_docs.sort(key=lambda x: -x[1])
-        vector_ranked_docs = vector_ranked_docs[0:10]
+        vector_ranked_docs = vector_ranked_docs[0:max_vect_use]
 
         net_ranked_docs = []
         for (doc, _) in vector_ranked_docs[
@@ -219,17 +226,21 @@ elif search and get_relevance:
 
         net_ranked_docs.sort(key=lambda x: -x[1])
         expected_ranked_docs = qreldocs[qrel.query_id]
-        intersect = set(net_ranked_docs).intersection(set(expected_ranked_docs))
 
+        intersect = set([int(d[0].doc_id) for d in net_ranked_docs]).intersection(
+            set(expected_ranked_docs)
+        )
+        precission_total.append(len(intersect) / max_vect_use)
         recall_total.append(len(intersect) / len(expected_ranked_docs))
 
     recall = sum(recall_total) / len(recall_total)
+    precission = sum(precission_total) / len(precission_total)
+    fscore = 2 * (precission * recall) / (precission + recall)
 
-    p, r, f = netrank_model.get_relevance(dataset, max_rel_test)
     st.write(
         " | Relevance Metric | Result |\n",
         " | ---- | ---- |\n",
-        f"| Precission | {p}\n",
+        f"| Precission | {precission}\n",
         f"| Recall | {recall}\n",
-        #f"| F1 | {f}\n",
+        f"| F1 | {fscore}\n",
     )
