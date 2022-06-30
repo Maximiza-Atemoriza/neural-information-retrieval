@@ -160,7 +160,7 @@ max_rel_test = st.sidebar.select_slider(
 get_relevance = False
 if model_select.startswith(LR_PREFIX):
     get_relevance = st.checkbox(
-        "Get model relevance using predifiend queries", value=True
+        "Get model relevance metrics using predefined queries", value=True
     )
 
 if get_relevance:
@@ -178,10 +178,17 @@ if search and not get_relevance:
 
     st.write(f"Querying _{query}_ ...")
     ranked = predict(vector_model, netrank_model, dataset, query)
-
     printItmes(ranked, max_results)
+
 elif search and get_relevance:
     vector_model, netrank_model, dataset = prepare_model(model_select, dataset_select)
     assert netrank_model is not None
 
     p, r, f = netrank_model.get_relevance(dataset, max_rel_test)
+    st.write(
+        " | Relevance Metric | Result |\n",
+        " | ---- | ---- |\n",
+        f"| Precission | {p}\n",
+        f"| Recall | {r}\n",
+        f"| F1 | {f}\n",
+    )

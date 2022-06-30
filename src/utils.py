@@ -57,22 +57,33 @@ def get_training_dataset(dataset):
     return X, Y
 
 
-def get_qrel_set(dataset, sample_size):
+def get_test_set(dataset, sample_size):
     docs = {int(doc.doc_id): doc.text for doc in dataset.docs_iter()}
     queries = {int(query.query_id): query.text for query in dataset.queries_iter()}
-    qrel = np.array(dataset.queries_iter())
+    qrels = {
+        (qrel.query_id, qrel.doc_id): qrel.relevance for qrel in dataset.qrels_iter()
+    }
 
-    qrel_sample = qrel[np.random.choice(len(qrel), size=sample_size, replace=False)]
+    sample_size = min(len(docs), len(queries), sample_size)
+
+    queries_sample = np.array([query for query in dataset.queries_iter()])
+    queries_sample = queries_sample[
+        np.random.choice(len(queries_sample), size=sample_size, replace=False)
+    ]
+
+    docs_sample = np.array([doc for doc in dataset.queries_iter()])
+    docs_sample = docs_sample[
+        np.random.choice(len(docs_sample), size=sample_size, replace=False)
+    ]
 
     output = []
-    for qrel in qrel_sample:
+    for (q, d) in zip(queries_sample, docs_sample):
+        print(q, d)
         try:
-            doc = docs[int(qrel.doc_id)]
-            query = queries[int(qrel.query_id)]
-            relevance = qrel.relevance
-            output.append((doc, query, relevance))
+            relevance = qrels[int(q[0]), int(d[0])]
         except KeyError:
-            pass
+            relevance = 0
+        output.append((q[1], d[1], relevance))
 
     return output
 

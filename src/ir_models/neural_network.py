@@ -7,7 +7,7 @@ from ..embeddings.utils import get_embedding_matrix
 from keras.layers import Embedding
 from keras import layers
 from keras import Model
-from ..utils import get_qrel_set, get_vectorizer, get_word_index, get_training_dataset
+from ..utils import get_test_set, get_vectorizer, get_word_index, get_training_dataset
 import dill
 from keras.models import load_model
 
@@ -153,7 +153,7 @@ class NetRank:
         return int(np.argmax(self.model([d, q])))
 
     def get_relevance(self, dataset, amount: int):
-        test_set = get_qrel_set(dataset, amount)
+        test_set = get_test_set(dataset, amount)
 
         tp = 0
         tn = 0
@@ -163,7 +163,12 @@ class NetRank:
             relevance = self.predict_score(doc, query)
 
             if relevance > 0 and expected_relevance > 0:
+                val = min(expected_relevance, relevance) / max(
+                    expected_relevance, relevance
+                )
                 tp += 1
+                # tp += val
+                # fp += 1 - val
             elif relevance == 0 and expected_relevance == 0:
                 tn += 1
             elif relevance == 0 and expected_relevance > 0:
@@ -171,8 +176,10 @@ class NetRank:
             elif relevance > 0 and expected_relevance == 0:
                 fn += 1
 
-        precission = tp / (tp + fp)
-        recall = tp / (tp + fn)
-        fscore = 2 * tp / (2 * tp + fp + fn)
+        print(f"Target size: {amount} Real size: {len(test_set)}")
+        print(f"tp: {tp} tn: {tn} fp: {fp} fn: {fn}")
+        precission = 1 if tp + fp == 0 else tp / (tp + fp)
+        recall = 1 if tp + fn == 0 else tp / (tp + fn)
+        fscore = 1 if (2 * tp + fp + fn == 0) else 2 * tp / (2 * tp + fp + fn)
 
         return (precission, recall, fscore)
