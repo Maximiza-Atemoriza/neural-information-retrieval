@@ -150,7 +150,4 @@ class NetRank:
         query_vec = self.vectorizer(query).numpy()
         d = np.array([doc_vec])
         q = np.array([query_vec])
-        return self.model([d, q])
-
-    def predict_class(self, doc: str, query: str):
-        return np.argmax(self.predict_score(doc, query))
+        return int(np.argmax(self.model([d, q])))

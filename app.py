@@ -1,15 +1,22 @@
 from typing import Any, List, Tuple
 import streamlit as st
+import ir_datasets
 
+from src.ir_models.neural_network import NetRank
 from src.ir_models.neural_network_regression import NetRankRegression
 from src.ir_models.vector import VectorModel
-
-import ir_datasets
 from src.datasets import IRDataset
+
 
 RankedDocs = List[Tuple[Any, int]]
 
-model_possible_sections = [LR, VECT] = ["Learning to Rank (LR)", "Vectorial"]
+LR_PREFIX = "Learning to Rank"
+
+model_possible_sections = [LR, LR_REGRESSION, VECT] = [
+    f"{LR_PREFIX} (Classifier)",
+    f"{LR_PREFIX} (Regression)",
+    "Vectorial",
+]
 dataset_possible_sections = [CRAN, VASWANI, CRANMOD] = [
     "Cranfield",
     "Vaswani",
@@ -45,19 +52,21 @@ def prepare_dataset(dataset: str):
 @st.experimental_singleton(suppress_st_warning=True)  # pyright: ignore
 def prepare_model(
     model_select: str, dataset_select: str
-) -> Tuple[VectorModel, NetRankRegression | None, Any]:
+) -> Tuple[VectorModel, NetRank | None, Any]:
     dataset, cat = prepare_dataset(dataset_select)
 
-    if model_select in [VECT, LR]:
+    if model_select == VECT or model_select.startswith(LR_PREFIX):
         st.write(f"Cache Miss! Training Vector model with {dataset_select}")
         v = VectorModel()
         v.index(dataset)
         st.success(f"Vector model trained succesfully with {dataset_select}")
-        if model_select == LR:
-            st.write(f"Cache Miss! Training LR model with {dataset_select}")
-            lr = NetRankRegression()
+        if model_select.startswith(LR_PREFIX):
+            st.write(f"Cache Miss! Training {model_select} model with {dataset_select}")
+            lr = NetRankRegression() if model_select == LR_REGRESSION else NetRank()
             lr.train(dataset, cat)
-            st.success(f"LR model trained succesfully with {dataset_select}")
+            st.success(
+                f"{model_select} model trained succesfully with {dataset_select}"
+            )
             return (v, lr, dataset)
         else:
             return (v, None, dataset)
@@ -67,7 +76,7 @@ def prepare_model(
 
 def predict(
     vector_model: VectorModel,
-    netrank_model: NetRankRegression | None,
+    netrank_model: NetRank | None,
     dataset: Any,
     query: str,
 ) -> RankedDocs:
@@ -79,7 +88,7 @@ def predict(
     net_ranked: RankedDocs = []
     for (doc, _) in vector_ranked[0 : min(max_vect_use, len(vector_ranked))]:
         doc_text: str = doc.text
-        doc_score: int = netrank_model.predict_score(doc_text, query)[0]
+        doc_score: int = netrank_model.predict_score(doc_text, query)
         net_ranked.append((doc, doc_score))
 
     net_ranked.sort(key=lambda x: -x[1])
@@ -128,7 +137,6 @@ search = st.button(
 )
 
 if search:
-    # Notify about query and query parameters
     vector_model, netrank_model, dataset = prepare_model(model_select, dataset_select)
 
     st.write(f"Querying _{query}_ ...")

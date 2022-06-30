@@ -1,6 +1,10 @@
+from typing import Dict
+from keras.layers.preprocessing.text_vectorization import TextVectorization
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+
+from src.ir_models.neural_network import NetRank
 from ..embeddings.glove import load_glove
 from ..embeddings.utils import get_embedding_matrix
 from keras.layers import Embedding
@@ -11,11 +15,26 @@ import dill
 from keras.models import load_model
 
 
-class NetRankRegression:
+class NetRankRegression(NetRank):
     def __init__(self) -> None:
-        self.vectorizer = None
-        self.word_index = None
-        self.model = None
+        self._vectorizer = None
+        self._word_index = None
+        self._model = None
+
+    @property
+    def vectorizer(self) -> TextVectorization:
+        assert self._vectorizer is not None
+        return self._vectorizer
+
+    @property
+    def model(self) -> Model:
+        assert self._model is not None
+        return self._model
+
+    @property
+    def word_index(self) -> Dict[str, int]:
+        assert self._word_index is not None
+        return self._word_index
 
     def save(self, path, model_name) -> None:
         real_path = path + "/" + "net_rank" + model_name
@@ -30,19 +49,19 @@ class NetRankRegression:
         file.close()
 
     def load(self, file_path, model_name) -> None:
-        self.model = load_model(file_path + model_name)
+        self._model = load_model(file_path + model_name)
 
         file = open(file_path + model_name + "_vectorizer")
-        self.vectorizer = dill.load(file)
+        self._vectorizer = dill.load(file)
         file.close()
 
         file = open(file_path + model_name + "_word_index")
-        self.word_index = dill.load(file)
+        self._word_index = dill.load(file)
         file.close()
 
     def train(self, dataset, cat):
-        self.vectorizer = get_vectorizer(dataset)
-        self.word_index = get_word_index(self.vectorizer)
+        self._vectorizer = get_vectorizer(dataset)
+        self._word_index = get_word_index(self.vectorizer)
 
         embeddings_index = load_glove()
         embedding_dim = 50
@@ -86,7 +105,7 @@ class NetRankRegression:
         z = layers.Dense(128, activation="relu")(z)
         z = layers.Dense(128, activation="relu")(z)
         z = layers.Dense(1)(z)
-        self.model = Model(inputs=[input_doc, input_query], outputs=z)
+        self._model = Model(inputs=[input_doc, input_query], outputs=z)
         self.model.summary()
 
         X, Y = get_training_dataset(dataset)
@@ -134,4 +153,4 @@ class NetRankRegression:
         query_vec = self.vectorizer(query).numpy()
         d = np.array([doc_vec])
         q = np.array([query_vec])
-        return self.model([d, q])
+        return self.model([d, q])[0][0]
