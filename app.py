@@ -110,10 +110,10 @@ def printItmes(ranked: RankedDocs, amount: int):
 
 
 # ------------------------------ Main Visual Stuff ------------------------------
-st.title("Information Retrieval Final Project")
+st.title("Learning to Rank")
 
 model_select: str = st.selectbox(
-    "Select Model", options=model_possible_sections
+    "Select Model", options=model_possible_sections, index=1
 )  # pyright: ignore
 
 dataset_select: str = st.selectbox(
@@ -126,7 +126,7 @@ max_vect_use = st.sidebar.select_slider(
     "Docs extracted from Vectorial model",
     [100 + 50 * i for i in range(9)],
     value=100,
-    disabled=model_select != LR,
+    disabled=not model_select.startswith(LR_PREFIX),
 )
 
 
