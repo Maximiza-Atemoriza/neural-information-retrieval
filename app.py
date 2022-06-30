@@ -13,8 +13,8 @@ RankedDocs = List[Tuple[Any, int]]
 LR_PREFIX = "Learning to Rank"
 
 model_possible_sections = [LR, LR_REGRESSION, VECT] = [
-    f"{LR_PREFIX} (Regression)",
     f"{LR_PREFIX} (Classifier)",
+    f"{LR_PREFIX} (Regression)",
     "Vectorial",
 ]
 dataset_possible_sections = [CRAN, VASWANI, CRANMOD] = [
@@ -62,7 +62,7 @@ def prepare_model(
         st.success(f"Vector model trained succesfully with {dataset_select}")
         if model_select.startswith(LR_PREFIX):
             st.write(f"Cache Miss! Training {model_select} model with {dataset_select}")
-            lr = NetRankRegression() if model_select == LR else NetRank()
+            lr = NetRankRegression() if model_select == LR_REGRESSION else NetRank()
             lr.train(dataset, cat)
             st.success(
                 f"{model_select} model trained succesfully with {dataset_select}"
