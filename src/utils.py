@@ -1,7 +1,7 @@
 from typing import Dict
-from keras.preprocessing.text import Tokenizer
-
 from keras.layers import TextVectorization
+from keras.preprocessing.text import Tokenizer
+import numpy as np
 import spacy
 
 
@@ -55,6 +55,26 @@ def get_training_dataset(dataset):
             pass
 
     return X, Y
+
+
+def get_qrel_set(dataset, sample_size):
+    docs = {int(doc.doc_id): doc.text for doc in dataset.docs_iter()}
+    queries = {int(query.query_id): query.text for query in dataset.queries_iter()}
+    qrel = np.array(dataset.queries_iter())
+
+    qrel_sample = qrel[np.random.choice(len(qrel), size=sample_size, replace=False)]
+
+    output = []
+    for qrel in qrel_sample:
+        try:
+            doc = docs[int(qrel.doc_id)]
+            query = queries[int(qrel.query_id)]
+            relevance = qrel.relevance
+            output.append((doc, query, relevance))
+        except KeyError:
+            pass
+
+    return output
 
 
 def get_word_index(vectorizer) -> Dict[str, int]:
