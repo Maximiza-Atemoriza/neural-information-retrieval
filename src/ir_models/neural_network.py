@@ -7,7 +7,7 @@ from ..embeddings.utils import get_embedding_matrix
 from keras.layers import Embedding
 from keras import layers
 from keras import Model
-from ..utils import get_vectorizer, get_word_index, get_training_dataset
+from ..utils import get_qrel_set, get_vectorizer, get_word_index, get_training_dataset
 import dill
 from keras.models import load_model
 
@@ -56,7 +56,7 @@ class NetRank:
         self._word_index = dill.load(file)
         file.close()
 
-    def train(self, dataset, number_of_relevance_levels=5):
+    def train(self, dataset, cat):
         self._vectorizer = get_vectorizer(dataset)
         self._word_index = get_word_index(self.vectorizer)
 
@@ -100,8 +100,8 @@ class NetRank:
 
         z = layers.Dense(128, activation="relu")(combined)
         z = layers.Dense(64, activation="relu")(z)
-        z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
-        # z = layers.Dense(number_of_relevance_levels, activation="softmax")(combined)
+        z = layers.Dense(cat, activation="softmax")(z)
+        # z = layers.Dense(cat, activation="softmax")(combined)
         self._model = Model(inputs=[input_doc, input_query], outputs=z)
         self._model.summary()
 
@@ -151,3 +151,28 @@ class NetRank:
         d = np.array([doc_vec])
         q = np.array([query_vec])
         return int(np.argmax(self.model([d, q])))
+
+    def get_relevance(self, dataset, amount: int):
+        test_set = get_qrel_set(dataset, amount)
+
+        tp = 0
+        tn = 0
+        fp = 0
+        fn = 0
+        for doc, query, expected_relevance in test_set:
+            relevance = self.predict_score(doc, query)
+
+            if relevance > 0 and expected_relevance > 0:
+                tp += 1
+            elif relevance == 0 and expected_relevance == 0:
+                tn += 1
+            elif relevance == 0 and expected_relevance > 0:
+                fp += 1
+            elif relevance > 0 and expected_relevance == 0:
+                fn += 1
+
+        precission = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        fscore = 2 * tp / (2 * tp + fp + fn)
+
+        return (precission, recall, fscore)
