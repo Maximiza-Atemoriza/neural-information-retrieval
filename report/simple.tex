@@ -11,6 +11,7 @@
 \usepackage{amsfonts} 
 \usepackage{csquotes}
 \usepackage{hyperref}
+\usepackage{listings}
 
 \begin{document}
 \maketitle
@@ -112,6 +113,79 @@ $$sim(d_{j},q) = \frac{ d_{j} \cdot q }{ |d_{j}||q| }$$
 
 
 \subsection{Modelo con redes neuronales}
+
+Para determinar qué tan relevante es un documento para una consulta dada se implementaron modelos de redes neuronales. En total, en la aplicación existen cuatro de estos modelos. 
+
+La función del modelo de red neuronal es determinar para una consulta $q$ y un documento $d$ se obtenga un ranking $N(q,d)$, donde $N$ es la red neuronal. Este valor de ranking varía de acuerdo al conjunto de datos con el cual el modelo se entrenó. Por ejemplo, en el conjunto de datos \textit{Cranfield} existen los niveles de relevancias $\{-1,1,2,3,4\}$, los cuales se mapearon a $\{0,1,2,3,4\}$. Un valor de relevancia $0$ significa que el documento $d$ es totalmente irrelevante a la consulta $q$ y un valor de relevancia de $4$ significa que el documento es una total respuesta a la consulta por el usuario.
+
+Entonces se tienen un conjunto de datos de entrenamiento que tiene la forma $(documento, consulta, relevancia)$, es el trabajo de la red neuronal aprender estas relaciones.
+
+Los cuatros modelos son:
+\begin{itemize}
+	\item Un clasificador y un regresor mediante redes convolucionales
+	\item Un clasificador y un regresor mediante redes recurrentes con capas LSTM
+\end{itemize}
+
+Investigaciones recientes han empleado redes neuronales convolucionales o redes neuronales recurrentes para la clasificación de textos motivados por el notable éxito del aprendizaje profundo \cite{wu2017convolutional}.
+
+
+Para la implementaci\'on de los modelo se utiliz\'o keras debido a sus facilidades para el preprocesamiento de texto y para elaborar arquitecturas de manera sencilla.
+
+Para cada uno de lo tipos de redes, las arquitecturas del clasificador y el regresor son en esencia las mismas; el cambio fundamental es en la capa de salida y en la funci\'on de p\'erdida.
+
+Dicho esto se explica la arquitectura general seguida para la red convolucional:
+\begin{itemize}
+	\item Capa de Embedding: Para representar los vectores de documento y consulta en un espacio vectorial continuo de dimensi\'on fija peque\~na. Esto es \'util pues aumenta el rendimiento con respecto al procesamiento de lenguaje natural y puede capturar algo de la sem\'antica de la palabra. Para el embedding se us\'o un modelo preentrenado: GloVe. Mediante glove se puede obtener la matriz de la capa del embedding de la red.
+	
+	 \begin{lstlisting}[frame=single, breaklines, language=Python] 
+embeddings_index = {}
+with open(path_to_glove_file) as f:
+	for line in f:
+		word, coefs = line.split(maxsplit=1)
+		coefs = np.fromstring(coefs, "f", sep=" ")
+		embeddings_index[word] = coefs
+	print("Found %s word vectors." % len(embeddings_index))
+	 
+	 \end{lstlisting}
+	
+	\item Capa de convoluci\'on
+	\item Capa(s) densamente conectadas
+	\item Capa de salida
+\end{itemize}
+
+En c\'odigo, generalmente el modelo convolucional es de la siguiente manera:
+	 \begin{lstlisting}[frame=single, breaklines, language=Python] 
+input_doc = keras.Input(shape=(None,), dtype="int64")
+input_query = keras.Input(shape=(None,), dtype="int64")
+
+embedding_layer = Embedding( #GloVe
+	num_tokens,
+	embedding_dim,
+	embeddings_initializer=keras.initializers.Constant(embedding_matrix),
+	trainable=False,
+)
+
+embedded_sequences = embedding_layer(input_doc)
+x = layers.Conv1D(128, 5, activation="relu")(embedded_sequences)
+x = layers.GlobalMaxPooling1D()(x)
+
+
+embedded_sequences = embedding_layer(input_query)
+y = layers.Conv1D(128, 5, activation="relu")(embedded_sequences)
+y = layers.GlobalMaxPooling1D()(y)
+
+combined = layers.Concatenate()([x, y])
+
+# Para clasificador
+z = layers.Dense(16, activation="relu")(combined)
+z = layers.Dense(number_of_relevance_levels, activation="softmax")(z)
+
+#Para regresor
+z = layers.Dense(16, activation="relu")(combined)
+z = layers.Dense(1)(z) 
+
+\end{lstlisting}
+
 
 
 \section{Análisis de los resultados} 
