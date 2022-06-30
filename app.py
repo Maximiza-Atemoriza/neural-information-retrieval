@@ -184,11 +184,52 @@ elif search and get_relevance:
     vector_model, netrank_model, dataset = prepare_model(model_select, dataset_select)
     assert netrank_model is not None
 
+    # relevant = [relevant for relevant in dataset.qrels_iter() if relevant.relevance > 0]
+    docs = {int(doc.doc_id): doc.text for doc in dataset.docs_iter()}
+    queries = {int(query.query_id): query.text for query in dataset.queries_iter()}
+
+    qreldocs = dict()
+    for qrel in dataset.qrels_iter():
+        if qrel.relevance < 3:
+            continue
+        if qrel.query_id in qreldocs:
+            qreldocs[qrel.query_id].append(qrel.doc_id)
+        else:
+            qreldocs[qrel.query_id] = [qrel.doc_id]
+
+    recall_total = []
+    querysings = set()
+    for qrel in dataset.qrels_iter():
+        if qrel.query_id in querysings:
+            continue
+        querysings.add(qrel.query_id)
+        query = queries[qrel.query_id]
+
+        vector_ranked_docs = vector_model.get_ranked_docs(query.text, dataset)
+        vector_ranked_docs.sort(key=lambda x: -x[1])
+        vector_ranked_docs = vector_ranked_docs[0:10]
+
+        net_ranked_docs = []
+        for (doc, _) in vector_ranked_docs[
+            0 : min(max_vect_use, len(vector_ranked_docs))
+        ]:
+            doc_text: str = doc.text
+            doc_score: int = netrank_model.predict_score(doc_text, query)
+            net_ranked_docs.append((doc, doc_score))
+
+        net_ranked_docs.sort(key=lambda x: -x[1])
+        expected_ranked_docs = qreldocs[qrel.query_id]
+        intersect = set(net_ranked_docs).intersection(set(expected_ranked_docs))
+
+        recall_total.append(len(intersect) / len(expected_ranked_docs))
+
+    recall = sum(recall_total) / len(recall_total)
+
     p, r, f = netrank_model.get_relevance(dataset, max_rel_test)
     st.write(
         " | Relevance Metric | Result |\n",
         " | ---- | ---- |\n",
         f"| Precission | {p}\n",
-        f"| Recall | {r}\n",
-        f"| F1 | {f}\n",
+        f"| Recall | {recall}\n",
+        #f"| F1 | {f}\n",
     )
