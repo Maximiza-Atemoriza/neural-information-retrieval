@@ -1,0 +1,129 @@
+\title{\huge{Neural Information Retrieval}}
+\author{
+		David Guaty Domínguez C512 
+		\and
+		Adrián Rodríguez Portales C512 
+	    \and  Rodrigo D. Pino Trueba C512 }
+\date{June 2022}
+
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts} 
+\usepackage{csquotes}
+\usepackage{hyperref}
+
+\begin{document}
+\maketitle
+
+
+% \providecommand{\keywords}[1]
+% {
+%     \small
+%     \textbf{\textit{Keywords---}} #1 
+% }
+
+% \keywords{aprendizaje profundo, sistema de recuperación de información,redes neuronales}
+
+
+\section{Introducción}
+
+A lo largo de la historia de la humanidad,  el proceso de  almacenar y recuperar la información ha sido una tarea 
+bastante difundida. Sin embargo con el surgimiento de Internet y del \textit{Big Data}, los volúmenes de información 
+actuales son cada vez más grandes y se hace necesario el surgimiento de herramientas más sofisticadas 
+para poder satisfacer estas 
+necesidades. El estudio de esta área se le conoce como Recuperación de Información ( \textit{Information Retrieval} ).
+Entre los modelos clásicos utilizados se encuentran el booleano y el vectorial. Ambos modelos presentan ventajas en 
+determinadas situaciones, pero en muchos escenarios no logran cumplir con los requerimientos del sistema. 
+
+La aparición del aprendizaje automático (\textit{machine learning}) y ,en especial, del aprendizaje profundo
+(\textit{deep learning}), ha permitido revolucionar la industria y la ciencia . 
+Los sistemas de recuperación de información no se han quedado atrás. El enfoque conocido como \textit{Learning to Rank} 
+\cite{learningtorank} usa técnicas de aprendizaje automático para la tarea de recuperar información. Existen 
+tres formas principales de resolver este problema:
+
+\begin{itemize}
+	\item \textit{pointwise}: Este enfoque es el más sencillo de implementar y fue el primero en proponerse para las
+		tareas de \textit{Learning to Rank}.
+	\item \textit{pairwise}: El problema con el enfoque anterior es que se necesita la relevancia absoluta de un documento
+		con respecto a una consulta. Sin embargo, en muchos escenarios esta información no estás disponible, entonces lo
+		que se puede saber es, por ejemplo, que documento tiene mayor relevancia de una lista según la selección de un usuario 
+	\item \textit{listwise}: Este enfoque es el más difícil, pero también el más directo. A diferencia de los dos anteriores
+		, donde el problema se reduce a una regresión o clasificación, este trata de resolver el problema de ordenación
+		directamente.
+\end{itemize}
+
+Dentro de los modelos de aprendizaje automático más usados recientemente para el proceso de \textit{ranking}, se encuentran las redes neuronales. A la aplicación de este conjunto de técnicas en la recuperación de información se le 
+conoce como \textit{Neural Information Retrieval} \cite{mitra2018an}. En este trabajo usaremos este enfoque y compararemos los resultados
+con un modelo de recuperación de información clásico ( vectorial ).
+
+
+\section{Diseño del sistema de recuperación de información}
+
+TODO: Hablar un poco de la arquitectura general de la aplicación
+
+\subsection{Preprocesamiento de los datos}
+
+Los dataset utilizados fueron preprocesados para obtener aquellas
+palabras que tienen mayor semántica. Durante este proceso se
+realizaron dos tareas:
+
+\begin{itemize}
+	\item Eliminación de \textit{stopwords}:los \textit{stopwords} son
+		términos muy comunes que brindan poca información semántica
+		en un texto o documento. Generalmente suelen ser adverbios,
+		pronombres y artículos.
+	\item \textit{Lemmatization}: este proceso consiste en llevar a las
+		palabras a su raíz gramatical, haciendo análisis morfológico 
+		de los términos y eliminando cualquier inflexión. Esto permite
+		indexar términos con igual semántica como uno solo .
+\end{itemize}
+
+Ambas tareas se hicieron con la biblioteca de Python \textit{Spacy}
+
+\subsection{Modelo vectorial}
+
+El modelo vectorial\cite{vectormodel} es un modelo algebraico que representa los documentos
+y la consulta como vectores con pesos. Cada término indexado representa
+una dimensión del vector, por lo que el vocabulario del corpus es
+quien define la dimensión del espacio vectorial.
+
+Para el cálculo de los pesos existen varias formas. Una de las más 
+usadas es \textit{tf-idf}. Esta tiene entre sus ventajas que es 
+fácil de computar. Sin embargo, como está basado en el modelo
+\textit{bag of words}, no tiene en cuenta el orden de las palabras
+en el texto.
+
+Para calcular el \textit{tf} se utilizó la siguiente fórmula:
+
+$$tf_{ij} = K + \frac{(1-K)freq_{ij}}{\max_{i} freq_{ij}}$$
+
+En el caso del \textit{idf} se utilizó:
+
+$$idf_i= \log \frac{N}{n_i}$$
+
+donde $N$ es el total de documentos en el corpus y $n_i$ es la
+cantidad de documentos donde aparece el término $i$. Luego con estos 
+valores los pesos se obtenían como $w_{ij}= tf_{ij}*idf_{ij}$.
+
+Finalmente para obtener la similitud entre la consulta y los 
+documentos se usó el coseno del ángulo :
+
+$$sim(d_{j},q) = \frac{ d_{j} \cdot q }{ |d_{j}||q| }$$
+
+
+\subsection{Modelo con redes neuronales}
+
+
+\section{Análisis de los resultados} 
+
+
+\section{Conclusiones} % recomendaciones en esta sección también
+
+
+
+
+% \nocite{*}
+% \bibliographystyle{abbrv}
+\bibliography{simple}
+
+\end{document}
