@@ -159,8 +159,11 @@ class NetRank:
         tn = 0
         fp = 0
         fn = 0
+        total_relevant = 0
         for doc, query, expected_relevance in test_set:
             relevance = self.predict_score(doc, query)
+            if expected_relevance > 0:
+                total_relevant += 1
 
             if relevance > 0 and expected_relevance > 0:
                 val = min(expected_relevance, relevance) / max(
@@ -171,9 +174,9 @@ class NetRank:
                 # fp += 1 - val
             elif relevance == 0 and expected_relevance == 0:
                 tn += 1
-            elif relevance == 0 and expected_relevance > 0:
-                fp += 1
             elif relevance > 0 and expected_relevance == 0:
+                fp += 1
+            elif relevance == 0 and expected_relevance > 0:
                 fn += 1
 
         print(f"Target size: {amount} Real size: {len(test_set)}")
