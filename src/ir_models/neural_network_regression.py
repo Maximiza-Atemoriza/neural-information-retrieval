@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-from ir_models.neural_network import NetRank
+from src.ir_models.neural_network import NetRank
 from ..embeddings.glove import load_glove
 from ..embeddings.utils import get_embedding_matrix
 from keras.layers import Embedding
@@ -153,4 +153,4 @@ class NetRankRegression(NetRank):
         query_vec = self.vectorizer(query).numpy()
         d = np.array([doc_vec])
         q = np.array([query_vec])
-        return self.model([d, q])
+        return self.model([d, q])[0][0]
