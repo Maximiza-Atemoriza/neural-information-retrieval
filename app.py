@@ -17,10 +17,10 @@ model_possible_sections = [LR, LR_REGRESSION, VECT] = [
     f"{LR_PREFIX} (Regression)",
     "Vectorial",
 ]
-dataset_possible_sections = [CRAN, VASWANI, CRANMOD] = [
-    "Cranfield",
-    "Vaswani",
-    "Processed Cranfield",
+dataset_possible_sections = [CRAN, VASWANI, ANTIQUE] = [
+    "Cranfield (Processed)",
+    "Vaswani (Processed)",
+    "Antique (Processed)",
 ]
 
 # --------------------------------- Util Functions ---------------------------------
@@ -32,20 +32,28 @@ def preprocess_datatset(dataset_name: str, verbose: bool, lemma: bool):
 
 
 def prepare_dataset(dataset: str):
+    dataset_name: str
+    cat: int
     if dataset == CRAN:
-        return ir_datasets.load("cranfield"), 5
-    if dataset == CRANMOD:
-        try:
-            return IRDataset.load("processed_cranfield"), 5
-        except FileNotFoundError:
-            st.write(
-                f"Cache miss! {dataset} does not exists, processing. This may take a while."
-            )
-            preprocess_datatset("cranfield", True, True)
-            return IRDataset.load("preprocess_datatset"), 5
-    if dataset == VASWANI:
-        return ir_datasets.load("vaswani"), 2
-    raise Exception(f"Dataset option {dataset} not yet supported")
+        dataset_name = "cranfield"
+        cat = 5
+    elif dataset == VASWANI:
+        dataset_name = "vaswani"
+        cat = 1
+    elif dataset == ANTIQUE:
+        dataset_name = "antique"
+        cat = 2
+    else:
+        raise Exception(f"Dataset option {dataset} not yet supported")
+
+    try:
+        return IRDataset.load(f"processed_{dataset_name}"), cat
+    except FileNotFoundError:
+        st.write(
+            f"Cache miss! {dataset} does not exists, processing. This may take a while."
+        )
+        preprocess_datatset("cranfield", True, True)
+        return IRDataset.load(f"processed_{dataset_name}"), cat
 
 
 # Cache accordingly to input parameters
