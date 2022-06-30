@@ -83,7 +83,7 @@ def get_test_set(dataset, sample_size):
             relevance = qrels[int(q[0]), int(d[0])]
         except KeyError:
             relevance = 0
-        output.append((q[1], d[1], relevance))
+        output.append((q[1], d[1],0 if relevance < 0 else  relevance))
 
     return output
 
