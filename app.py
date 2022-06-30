@@ -4,6 +4,8 @@ import ir_datasets
 
 from src.ir_models.neural_network import NetRank
 from src.ir_models.neural_network_regression import NetRankRegression
+from src.ir_models.rnn import RNN as Rnn
+from src.ir_models.rnn_regression import RNNRegression as RnnRegression
 from src.ir_models.vector import VectorModel
 from src.datasets import IRDataset
 
@@ -11,10 +13,13 @@ from src.datasets import IRDataset
 RankedDocs = List[Tuple[Any, int]]
 
 LR_PREFIX = "Learning to Rank"
+LR_RNN_PREFIX = f"{LR_PREFIX} using RNN"
 
-model_possible_sections = [LR, LR_REGRESSION, VECT] = [
+model_possible_sections = [LR, LR_REGRESSION, RNN, RNN_REGRESSION, VECT] = [
     f"{LR_PREFIX} (Classifier)",
     f"{LR_PREFIX} (Regression)",
+    f"{LR_RNN_PREFIX} (Classifier)",
+    f"{LR_RNN_PREFIX} (Regression)",
     "Vectorial",
 ]
 dataset_possible_sections = [CRAN, VASWANI, ANTIQUE] = [
@@ -23,12 +28,20 @@ dataset_possible_sections = [CRAN, VASWANI, ANTIQUE] = [
     "Antique (Processed)",
 ]
 
+name_to_model = {
+    LR: NetRank,
+    LR_REGRESSION: NetRankRegression,
+    RNN: Rnn,
+    RNN_REGRESSION: RnnRegression,
+}
+
 # --------------------------------- Util Functions ---------------------------------
 def preprocess_datatset(dataset_name: str, verbose: bool, lemma: bool):
     dataset = ir_datasets.load(dataset_name)
     d = IRDataset()
     d.process_dataset(dataset, verbose, lemma)
     d.save(f"processed_{dataset_name}")
+    return d
 
 
 def prepare_dataset(dataset: str):
@@ -52,8 +65,8 @@ def prepare_dataset(dataset: str):
         st.write(
             f"Cache miss! {dataset} does not exists, processing. This may take a while."
         )
-        preprocess_datatset("cranfield", True, True)
-        return IRDataset.load(f"processed_{dataset_name}"), cat
+        d = preprocess_datatset(dataset_name, True, True)
+        return d, cat
 
 
 # Cache accordingly to input parameters
@@ -70,7 +83,7 @@ def prepare_model(
         st.success(f"Vector model trained succesfully with {dataset_select}")
         if model_select.startswith(LR_PREFIX):
             st.write(f"Cache Miss! Training {model_select} model with {dataset_select}")
-            lr = NetRankRegression() if model_select == LR_REGRESSION else NetRank()
+            lr: NetRank = name_to_model[model_select]()
             lr.train(dataset, cat)
             st.success(
                 f"{model_select} model trained succesfully with {dataset_select}"
@@ -79,7 +92,7 @@ def prepare_model(
         else:
             return (v, None, dataset)
 
-    raise Exception(f"Model option {model_select} not yet supported")
+    raise Exception(f"Model {model_select} not yet supported")
 
 
 def predict(
@@ -125,7 +138,7 @@ model_select: str = st.selectbox(
 )  # pyright: ignore
 
 dataset_select: str = st.selectbox(
-    "Select dataset", options=dataset_possible_sections, index=2
+    "Select dataset", options=dataset_possible_sections, index=0
 )  # pyright: ignore
 
 max_results = st.sidebar.select_slider("Results Amount", [10 + i for i in range(91)])
@@ -137,17 +150,38 @@ max_vect_use = st.sidebar.select_slider(
     disabled=not model_select.startswith(LR_PREFIX),
 )
 
-
-query = st.text_input("Query:", placeholder="I dare you to query me!")
-
-search = st.button(
-    "Empty Query" if (len(query) == 0) else "Go!", disabled=len(query) == 0
+max_rel_test = st.sidebar.select_slider(
+    "Max relevance test size",
+    [100 + 50 * i for i in range(9)],
+    value=100,
+    disabled=not model_select.startswith(LR_PREFIX),
 )
 
-if search:
+get_relevance = False
+if model_select.startswith(LR_PREFIX):
+    get_relevance = st.checkbox(
+        "Get model relevance using predifiend queries", value=True
+    )
+
+if get_relevance:
+    query = ""
+else:
+    query = st.text_input("Query:", placeholder="I dare you to query me!")
+
+search = st.button(
+    "Get Relevance" if get_relevance else "Go!",
+    disabled=not get_relevance and len(query) == 0,
+)
+
+if search and not get_relevance:
     vector_model, netrank_model, dataset = prepare_model(model_select, dataset_select)
 
     st.write(f"Querying _{query}_ ...")
     ranked = predict(vector_model, netrank_model, dataset, query)
 
     printItmes(ranked, max_results)
+elif search and get_relevance:
+    vector_model, netrank_model, dataset = prepare_model(model_select, dataset_select)
+    assert netrank_model is not None
+
+    p, r, f = netrank_model.get_relevance(dataset, max_rel_test)
