@@ -276,9 +276,23 @@ Lamentablemente ninguna de estas v\'ias solucion\'o el problema del overfitting,
 \end{figure}
 
 
-
 \section{Análisis de los resultados} 
 
+Los resultados se encuentran lejos de ser satisfactorios. Hubo muy bajo nivel de recobrado y precisi\'on en todos los modelos, no existe una diferencia notable entre estos. La precisi\'on se encuentra sobre los \textit{0.1} mientras que el recobrado est\'a sobre el \textit{0.07}. Vale notar que todos los entrenamientos y pruebas se realizaron sobre el \textit{Cranfield} que representa un dataset d\'ificil de recuperar.
+
+
+Nunca se logr\'o un accuracy mayor que 0.4 en el set de validaci\'on, incluso despu\'es de reducir las \'epocas en un intento futil de disminuir el overfitting.\\
+
+\begin{tabular}{||l|r||} \hline
+    Relevance Metric & Score\\
+    \hline\hline
+    Precission & 0.1\\
+    \hline
+    Relevance & 0.07\\
+    \hline
+    F1 Score & 0.08\\
+    \hline
+\end{tabular}
 
 \section{Conclusiones} % recomendaciones en esta sección también
 
