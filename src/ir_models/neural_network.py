@@ -10,6 +10,7 @@ from keras import Model
 from ..utils import get_test_set, get_vectorizer, get_word_index, get_training_dataset
 import dill
 from keras.models import load_model
+import matplotlib.pyplot as plt
 
 
 class NetRank:
@@ -61,7 +62,7 @@ class NetRank:
         self._word_index = get_word_index(self.vectorizer)
 
         embeddings_index = load_glove()
-        embedding_dim = 50
+        embedding_dim = 300
 
         num_tokens = len(self._word_index) + 2
         embedding_matrix = get_embedding_matrix(
@@ -80,28 +81,30 @@ class NetRank:
 
         embedded_sequences = embedding_layer(input_doc)
         x = layers.Conv1D(128, 5, activation="relu")(embedded_sequences)
-        x = layers.MaxPooling1D(5)(x)
-        x = layers.Conv1D(128, 5, activation="relu")(x)
-        x = layers.MaxPooling1D(5)(x)
-        x = layers.Conv1D(128, 5, activation="relu")(x)
+        # x = layers.MaxPooling1D(5)(x)
+        # x = layers.Conv1D(128, 5, activation="relu")(x)
+        # x = layers.MaxPooling1D(5)(x)
+        # x = layers.Conv1D(128, 5, activation="relu")(x)
         x = layers.GlobalMaxPooling1D()(x)
         x = layers.Dense(4, activation="relu")(x)
+        x = layers.Dropout(0.5)(x)
 
         embedded_sequences = embedding_layer(input_query)
         y = layers.Conv1D(128, 5, activation="relu")(embedded_sequences)
-        y = layers.MaxPooling1D(5)(y)
-        y = layers.Conv1D(128, 5, activation="relu")(y)
-        y = layers.MaxPooling1D(5)(y)
-        y = layers.Conv1D(128, 5, activation="relu")(y)
+        # y = layers.MaxPooling1D(5)(y)
+        # y = layers.Conv1D(128, 5, activation="relu")(y)
+        # y = layers.MaxPooling1D(5)(y)
+        # y = layers.Conv1D(128, 5, activation="relu")(y)
         y = layers.GlobalMaxPooling1D()(y)
         y = layers.Dense(4, activation="relu")(y)
+        y = layers.Dropout(0.5)(y)
 
         combined = layers.Concatenate()([x, y])
 
-        z = layers.Dense(128, activation="relu")(combined)
-        z = layers.Dense(64, activation="relu")(z)
-        z = layers.Dense(cat, activation="softmax")(z)
-        # z = layers.Dense(cat, activation="softmax")(combined)
+        # z = layers.Dense(128, activation="relu")(combined)
+        # z = layers.Dense(64, activation="relu")(z)
+        # z = layers.Dense(cat, activation="softmax")(z)
+        z = layers.Dense(cat, activation="softmax")(combined)
         self._model = Model(inputs=[input_doc, input_query], outputs=z)
         self._model.summary()
 
@@ -135,15 +138,23 @@ class NetRank:
         self.model.compile(
             loss="sparse_categorical_crossentropy",
             optimizer="adam",
-            metrics=["acc"],
+            metrics=["accuracy"],
         )
-        self.model.fit(
+        history = self.model.fit(
             [train_docs, train_queries],
             train_score,
             batch_size=128,
             epochs=30,
             validation_data=([val_docs, val_queries], val_score),
         )
+        plt.figure(figsize=(16, 8))
+        plt.subplot(1, 2, 1)
+        self.plot_graphs(history, "accuracy")
+        plt.ylim(None, 1)
+        plt.subplot(1, 2, 2)
+        self.plot_graphs(history, "loss")
+        plt.ylim(0, None)
+        # plt.show()
 
     def predict_score(self, doc: str, query: str):
         doc_vec = self.vectorizer(doc).numpy()
@@ -186,3 +197,10 @@ class NetRank:
         fscore = 1 if (2 * tp + fp + fn == 0) else 2 * tp / (2 * tp + fp + fn)
 
         return (precission, recall, fscore)
+
+    def plot_graphs(self, history, metric):
+        plt.plot(history.history[metric])
+        plt.plot(history.history["val_" + metric], "")
+        plt.xlabel("Epochs")
+        plt.ylabel(metric)
+        plt.legend([metric, "val_" + metric])

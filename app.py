@@ -200,9 +200,6 @@ elif search and get_relevance:
     recall_total = []
     querysings = set()
     for i, qrel in enumerate(dataset.qrels_iter()):
-        if i > 0 and i % 25:
-            st.write("Procesando", "==" * (i % 25))
-
         if qrel.query_id in querysings:
             continue
         querysings.add(qrel.query_id)
@@ -214,7 +211,7 @@ elif search and get_relevance:
 
         vector_ranked_docs = vector_model.get_ranked_docs(query, dataset)
         vector_ranked_docs.sort(key=lambda x: -x[1])
-        vector_ranked_docs = vector_ranked_docs[0:max_vect_use]
+        vector_ranked_docs = vector_ranked_docs[0:10]
 
         net_ranked_docs = []
         for (doc, _) in vector_ranked_docs[
@@ -230,7 +227,7 @@ elif search and get_relevance:
         intersect = set([int(d[0].doc_id) for d in net_ranked_docs]).intersection(
             set(expected_ranked_docs)
         )
-        precission_total.append(len(intersect) / max_vect_use)
+        precission_total.append(len(intersect) / 10)
         recall_total.append(len(intersect) / len(expected_ranked_docs))
 
     recall = sum(recall_total) / len(recall_total)

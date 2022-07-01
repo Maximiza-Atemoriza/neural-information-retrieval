@@ -3,6 +3,7 @@ from keras.layers.preprocessing.text_vectorization import TextVectorization
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import matplotlib.pyplot as plt
 
 from src.ir_models.neural_network import NetRank
 from ..embeddings.glove import load_glove
@@ -64,7 +65,7 @@ class NetRankRegression(NetRank):
         self._word_index = get_word_index(self.vectorizer)
 
         embeddings_index = load_glove()
-        embedding_dim = 50
+        embedding_dim = 300
 
         num_tokens = len(self.word_index) + 2
         embedding_matrix = get_embedding_matrix(
@@ -140,13 +141,21 @@ class NetRankRegression(NetRank):
             optimizer="adam",
             metrics=[tf.keras.metrics.MeanSquaredError()],
         )
-        self.model.fit(
+        history = self.model.fit(
             [train_docs, train_queries],
             train_score,
             batch_size=128,
             epochs=30,
             validation_data=([val_docs, val_queries], val_score),
         )
+        plt.figure(figsize=(16, 8))
+        plt.subplot(1, 2, 1)
+        self.plot_graphs(history, "mean_squared_error")
+        plt.ylim(None, 1)
+        plt.subplot(1, 2, 2)
+        self.plot_graphs(history, "loss")
+        plt.ylim(0, None)
+        # plt.show()
 
     def predict_score(self, doc: str, query: str):
         doc_vec = self.vectorizer(doc).numpy()
@@ -154,3 +163,10 @@ class NetRankRegression(NetRank):
         d = np.array([doc_vec])
         q = np.array([query_vec])
         return self.model([d, q])[0][0]
+
+    def plot_graphs(self, history, metric):
+        plt.plot(history.history[metric])
+        plt.plot(history.history["val_" + metric], "")
+        plt.xlabel("Epochs")
+        plt.ylabel(metric)
+        plt.legend([metric, "val_" + metric])

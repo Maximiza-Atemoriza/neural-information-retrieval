@@ -2,7 +2,7 @@ from src.ir_models.neural_network import NetRank
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from ..utils import get_vectorizer, get_word_index, get_training_dataset
+from ..utils import get_training_dataset
 from tensorflow import keras
 
 
@@ -147,7 +147,7 @@ class RNN(NetRank):
         plt.subplot(1, 2, 2)
         self.plot_graphs(history, "loss")
         plt.ylim(0, None)
-        plt.show()
+        # plt.show()
 
     def plot_graphs(self, history, metric):
         plt.plot(history.history[metric])

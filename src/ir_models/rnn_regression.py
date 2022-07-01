@@ -137,7 +137,7 @@ class RNNRegression(NetRank):
         )
 
     def _train_model(self, train_dataset, test_dataset):
-        history = self.model.fit(train_dataset, epochs=2, validation_data=test_dataset)
+        history = self.model.fit(train_dataset, epochs=10, validation_data=test_dataset)
         plt.figure(figsize=(16, 8))
         plt.subplot(1, 2, 1)
         self.plot_graphs(history, "mean_squared_error")
@@ -145,7 +145,7 @@ class RNNRegression(NetRank):
         plt.subplot(1, 2, 2)
         self.plot_graphs(history, "loss")
         plt.ylim(0, None)
-        plt.show()
+        # plt.show()
 
     def plot_graphs(self, history, metric):
         plt.plot(history.history[metric])

@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 
-path_to_glove_file = "./glove.6B.50d.txt"
+path_to_glove_file = "./glove.6B.300d.txt"
 
 
 def load_glove():
