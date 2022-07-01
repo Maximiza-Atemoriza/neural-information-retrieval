@@ -1,46 +1,53 @@
-This is BibTeX, Version 0.99d (TeX Live 2022/dev/Debian)
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: simple.aux
-I found no \bibstyle command---while reading file simple.aux
-You've used 3 entries,
-            0 wiz_defined-function locations,
-            86 strings with 522 characters,
-and the built_in function-call counts, 0 in all, are:
-= -- 0
-> -- 0
+The style file: abbrv.bst
+Database file #1: simple.bib
+Warning--entry type for "learningtorank" isn't style-file defined
+--line 1 of file simple.bib
+Warning--entry type for "vectormodel" isn't style-file defined
+--line 6 of file simple.bib
+Warning--to sort, need author or key in learningtorank
+Warning--to sort, need author or key in vectormodel
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            516 strings with 4180 characters,
+and the built_in function-call counts, 909 in all, are:
+= -- 81
+> -- 28
 < -- 0
-+ -- 0
-- -- 0
-* -- 0
-:= -- 0
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
++ -- 13
+- -- 8
+* -- 58
+:= -- 139
+add.period$ -- 8
+call.type$ -- 4
+change.case$ -- 16
 chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 0
-format.name$ -- 0
-if$ -- 0
+cite$ -- 6
+duplicate$ -- 36
+empty$ -- 95
+format.name$ -- 8
+if$ -- 197
 int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 0
-num.names$ -- 0
-pop$ -- 0
-preamble$ -- 0
-purify$ -- 0
+int.to.str$ -- 4
+missing$ -- 2
+newline$ -- 19
+num.names$ -- 4
+pop$ -- 22
+preamble$ -- 1
+purify$ -- 12
 quote$ -- 0
-skip$ -- 0
+skip$ -- 36
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
+substring$ -- 45
+swap$ -- 4
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 0
-warning$ -- 0
-while$ -- 0
-width$ -- 0
-write$ -- 0
-(There was 1 error message)
+type$ -- 16
+warning$ -- 2
+while$ -- 6
+width$ -- 5
+write$ -- 34
+(There were 4 warnings)

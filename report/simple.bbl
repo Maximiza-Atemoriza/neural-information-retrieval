@@ -1,0 +1,22 @@
+\begin{thebibliography}{1}
+
+\bibitem{learningtorank}
+Learning to rank: A complete guide to ranking using machine learning | by
+  francesco casalegno | towards data science.
+
+\bibitem{vectormodel}
+Vector space model - wikipedia.
+
+\bibitem{mitra2018an}
+B.~Mitra and N.~Craswell.
+\newblock An introduction to neural information retrieval.
+\newblock {\em Foundations and Trends® in Information Retrieval},
+  13(1):1--126, December 2018.
+
+\bibitem{wu2017convolutional}
+H.~Wu and S.~Prasad.
+\newblock Convolutional recurrent neural networks for hyperspectral data
+  classification.
+\newblock {\em Remote Sensing}, 9(3):298, 2017.
+
+\end{thebibliography}
